@@ -1,0 +1,7 @@
+[project]
+name = "projet-5"
+version = "0.1.0"
+description = "Déployez un modèle de Machine Learning"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
