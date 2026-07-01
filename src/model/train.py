@@ -4,7 +4,7 @@ import pandas as pd
 import preprocessing
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, make_scorer
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
