@@ -92,19 +92,19 @@ def apply_feature_engineering(df_input : pd.DataFrame) -> pd.DataFrame:
     """
     df = df_input.copy()
 
-    # Remplissage des données manquantes 
-    df["SecondLargestPropertyUseTypeGFA"] = df["SecondLargestPropertyUseTypeGFA"].fillna(0)
-    df["ThirdLargestPropertyUseTypeGFA"] = df["ThirdLargestPropertyUseTypeGFA"].fillna(0)
-
-    df["SecondLargestPropertyUseType"] = df["SecondLargestPropertyUseType"].fillna('NotUsed')
-    df["ThirdLargestPropertyUseType"] = df["ThirdLargestPropertyUseType"].fillna('NotUsed')
-
     # Feature BuildingAge
     df["BuildingAge"] = datetime.now().year - df["YearBuilt"]    
     df = df.drop(columns=["YearBuilt"])
 
     # Feature multi-usage
     df["IsMultiUsage"] = df.apply(lambda row: 1 if pd.notna(row["SecondLargestPropertyUseType"]) or pd.notna(row["ThirdLargestPropertyUseType"]) else 0, axis=1)
+
+    # Remplissage des données manquantes 
+    df["SecondLargestPropertyUseTypeGFA"] = df["SecondLargestPropertyUseTypeGFA"].fillna(0)
+    df["ThirdLargestPropertyUseTypeGFA"] = df["ThirdLargestPropertyUseTypeGFA"].fillna(0)
+
+    df["SecondLargestPropertyUseType"] = df["SecondLargestPropertyUseType"].fillna('NotUsed')
+    df["ThirdLargestPropertyUseType"] = df["ThirdLargestPropertyUseType"].fillna('NotUsed')
  
     # Features surfaces ratio
     totalSurface = df["PropertyGFAParking"] + df["PropertyGFABuilding(s)"] # surface totale = parking + building
