@@ -5,7 +5,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 def delete_missing_data_and_outliers(df_input : pd.DataFrame) -> pd.DataFrame:
     """
-    /!\ utilisé pour le script d'entrainement du modèle uniquement /!\
+    ! utilisé pour le script d'entrainement du modèle uniquement !
     Supprime les lignes avec des valeurs manquantes et les outliers du DataFrame d'entrée.
 
     Args:
@@ -107,23 +107,25 @@ def apply_feature_engineering(df_input : pd.DataFrame) -> pd.DataFrame:
     df["ThirdLargestPropertyUseType"] = df["ThirdLargestPropertyUseType"].fillna('NotUsed')
  
     # Features surfaces ratio
+    print("test")
     totalSurface = df["PropertyGFAParking"] + df["PropertyGFABuilding(s)"] # surface totale = parking + building
 
+    print(f"totalSurface: {totalSurface.tolist()[0]}")
     ## Ratio surface parking  
-    df["ParkingSurfaceRatio"] = df["PropertyGFAParking"] / totalSurface
-    df["ParkingSurfaceRatio"].fillna(0, inplace=True) # Gère la division par 0 si jamais totalSurface =0
+    df["ParkingSurfaceRatio"] = df["PropertyGFAParking"] / totalSurface    
+    df.fillna({"ParkingSurfaceRatio": 0}, inplace=True) # Gère les valeurs manquantes si jamais totalSurface =0
 
     ## Ratio surface largest property use type
     df["LargestUseSurfaceRatio"] = df["LargestPropertyUseTypeGFA"] / totalSurface
-    df["LargestUseSurfaceRatio"].fillna(0, inplace=True)
+    df.fillna({"LargestUseSurfaceRatio": 0}, inplace=True) 
 
     ## Ratio surface second largest property use type
     df["SecondLargestUseSurfaceRatio"] = df["SecondLargestPropertyUseTypeGFA"] / totalSurface
-    df["SecondLargestUseSurfaceRatio"].fillna(0, inplace=True)
+    df.fillna({"SecondLargestUseSurfaceRatio": 0}, inplace=True)
 
     ## Ratio surface third largest property use type
     df["ThirdLargestUseSurfaceRatio"] = df["ThirdLargestPropertyUseTypeGFA"] / totalSurface
-    df["ThirdLargestUseSurfaceRatio"].fillna(0, inplace=True)
+    df.fillna({"ThirdLargestUseSurfaceRatio": 0}, inplace=True)
 
     # Feature Energies 
     df["HasElectricity"] = (df["Electricity(kBtu)"] > 0).astype(int)
