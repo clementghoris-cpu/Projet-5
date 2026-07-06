@@ -7,7 +7,7 @@ from .schemas import PredictionInput
 from model.model_loader import load_model
 from model.preprocessing import delete_useless_features, apply_feature_engineering
 
-model = load_model(os.path.join(os.getcwd(), r"data\model\pipeline_model.pkl"))
+model = load_model(os.path.join(os.getcwd(), "data", "model", "pipeline_model.pkl"))    # Ne pas utiliser de \ car lors du déploiement sur Linux, cela peut poser problème. Utiliser os.path.join pour la compatibilité multi-plateforme.
 app = FastAPI(title="API prediction consommation énergétique", version="1.0")
 
 # Exceptions handlers
