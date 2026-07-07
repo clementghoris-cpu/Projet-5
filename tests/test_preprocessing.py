@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.compose import ColumnTransformer
-from model.preprocessing import apply_feature_engineering, build_preprocessor_pipeline, delete_missing_data_and_outliers, delete_useless_features
+from src.model.preprocessing import apply_feature_engineering, build_preprocessor_pipeline, delete_missing_data_and_outliers, delete_useless_features
 
 ### --- FIXTURES POUR LES DONNÉES DE TEST ---
 @pytest.fixture

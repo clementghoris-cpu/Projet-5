@@ -1,14 +1,14 @@
 import pandas as pd
-import os
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from src.project_config import model_config, api_config
 from .schemas import PredictionInput
-from model.model_loader import load_model
-from model.preprocessing import delete_useless_features, apply_feature_engineering
+from src.model.model_loader import load_model
+from src.model.preprocessing import delete_useless_features, apply_feature_engineering
 
-model = load_model(os.path.join(os.getcwd(), "data", "model", "pipeline_model.pkl"))    # Ne pas utiliser de \ car lors du déploiement sur Linux, cela peut poser problème. Utiliser os.path.join pour la compatibilité multi-plateforme.
-app = FastAPI(title="API prediction consommation énergétique", version="1.0")
+model = load_model(model_config.MODEL_PATH)
+app = FastAPI(title=api_config.TITLE, version=api_config.VERSION, debug=api_config.DEBUG)
 
 # Exceptions handlers
 

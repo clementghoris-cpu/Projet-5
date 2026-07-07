@@ -37,3 +37,5 @@ jobs:
         - name:  Exécuter tests avec Pytest
           run: |
             pytest tests/
+          env:
+            PYTHONPATH: .
