@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 import pandas as pd
-from api.main import app
+from src.api.main import app
 
 client = TestClient(app)
 
@@ -34,7 +34,7 @@ def valid_payload():
         "GHGEmissionsIntensity": 1.2
     }
     
-@patch('api.main.model')    # On mock le modèle pour éviter d'avoir à charger un vrai fichier .pkl
+@patch('src.api.main.model')    # On mock le modèle pour éviter d'avoir à charger un vrai fichier .pkl
 def test_predict_success(mock_model, valid_payload):
     """Test : Données valides -> Statut 200 et retour de la prédiction."""
     # Configuration du mock pour simuler le comportement du modèle de ML
@@ -96,14 +96,14 @@ def test_predict_with_only_required_fields():
         "ComplianceStatus": "Compliant"
     }
     
-    with patch('api.main.model') as mock_model:
+    with patch('src.api.main.model') as mock_model:
         mock_model.predict.return_value = pd.Series([42.0]).values
         response = client.post("/predict", json=minimal_payload)
         
         assert response.status_code == 200
 
-@patch('api.main.apply_feature_engineering')
-@patch('api.main.delete_useless_features')
+@patch('src.api.main.apply_feature_engineering')
+@patch('src.api.main.delete_useless_features')
 def test_predict_empty_after_preprocessing(mock_delete, mock_engineering, valid_payload):
     """Test si les données deviennent vides après filtrage -> Erreur 400."""
     # On simule que le feature engineering retourne un DataFrame vide
@@ -115,7 +115,7 @@ def test_predict_empty_after_preprocessing(mock_delete, mock_engineering, valid_
     assert response.status_code == 400
     assert response.json()["detail"] == "Les données d'entrée sont invalides après le prétraitement."
 
-@patch('api.main.model')
+@patch('src.api.main.model')
 def test_predict_internal_server_error(mock_model, valid_payload):
     """Test si le modèle crash -> Erreur 500."""
     # On force le modèle à lever une erreur lors du .predict()
