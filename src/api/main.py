@@ -6,9 +6,11 @@ from src.project_config import model_config, api_config
 from .schemas import PredictionInput
 from src.model.model_loader import load_model
 from src.model.preprocessing import delete_useless_features, apply_feature_engineering
+from src.database.db_manager import DatabaseManager
 
 model = load_model(model_config.MODEL_PATH)
 app = FastAPI(title=api_config.TITLE, version=api_config.VERSION, debug=api_config.DEBUG)
+db_manager = DatabaseManager()
 
 # Exceptions handlers
 
@@ -44,6 +46,8 @@ async def predict(input_data: PredictionInput):
         print("Données d'entrée reçues pour la prédiction :")
         input_dict = input_data.model_dump(by_alias=True)   
 
+        prediction_input_id = db_manager.save_prediction_input(input_dict)
+
         print("Données d'entrée après conversion en dictionnaire :")     
         df_input = pd.DataFrame([input_dict])
 
@@ -59,6 +63,8 @@ async def predict(input_data: PredictionInput):
     
         print("Prédiction:")
         prediction = model.predict(df_engineered)
+
+        db_manager.save_prediction_output(prediction_input_id, float(prediction[0]))
 
         return {"prediction": prediction.tolist()}
     except HTTPException as http_exc:

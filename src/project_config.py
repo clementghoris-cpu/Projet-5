@@ -6,7 +6,7 @@ class DatabaseConfig:
     HOST: str = os.getenv("POSTGRES_HOST", "db")
     PORT: int = int(os.getenv("POSTGRES_PORT", 5432))
     DB_NAME: str = os.getenv("POSTGRES_DB", "energy_db")
-    DATABASE_URL: str = f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB_NAME}"
+    DATABASE_URL: str = f"postgresql+psycopg://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB_NAME}"
 
 class ModelConfig:
     MODEL_PATH: str = os.path.join(os.getcwd(), "data", "model", "pipeline_model.pkl") # Ne pas utiliser de \ car lors du déploiement sur Linux, cela peut poser problème. Utiliser os.path.join pour la compatibilité multi-plateforme.
@@ -16,6 +16,11 @@ class APIConfig:
     TITLE: str = "API prediction consommation énergétique"
     VERSION: str = "1.0"
 
+class TrainConfig:
+    TRAIN_DATA_CSV_PATH: str = os.path.join(os.getcwd(), "data", "raw", "building_consumption.csv") # Ne pas utiliser de \ car lors du déploiement sur Linux, cela peut poser problème. Utiliser os.path.join pour la compatibilité multi-plateforme.
+    MODEL_PATH: str = os.path.join(os.getcwd(), "data", "model", "pipeline_model.pkl")
+
 database_config = DatabaseConfig()
 model_config = ModelConfig()
 api_config = APIConfig()
+train_config = TrainConfig()

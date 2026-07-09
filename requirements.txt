@@ -16,6 +16,8 @@ colorama==0.4.6
     #   pytest
 fastapi==0.139.0
     # via projet-5 (pyproject.toml)
+greenlet==3.5.3
+    # via sqlalchemy
 h11==0.16.0
     # via
     #   httpcore2
@@ -46,6 +48,10 @@ pandas==3.0.3
     # via projet-5 (pyproject.toml)
 pluggy==1.6.0
     # via pytest
+psycopg==3.3.4
+    # via projet-5 (pyproject.toml)
+psycopg-binary==3.3.4
+    # via psycopg
 pydantic==2.13.4
     # via
     #   projet-5 (pyproject.toml)
@@ -64,6 +70,8 @@ scipy==1.18.0
     # via scikit-learn
 six==1.17.0
     # via python-dateutil
+sqlalchemy==2.0.51
+    # via projet-5 (pyproject.toml)
 starlette==1.3.1
     # via fastapi
 threadpoolctl==3.6.0
@@ -77,12 +85,15 @@ typing-extensions==4.16.0
     #   fastapi
     #   pydantic
     #   pydantic-core
+    #   sqlalchemy
     #   typing-inspection
 typing-inspection==0.4.2
     # via
     #   fastapi
     #   pydantic
 tzdata==2026.2
-    # via pandas
+    # via
+    #   pandas
+    #   psycopg
 uvicorn==0.50.2
     # via projet-5 (pyproject.toml)

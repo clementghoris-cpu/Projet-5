@@ -34,18 +34,23 @@ def valid_payload():
         "GHGEmissionsIntensity": 1.2
     }
     
+@patch('src.api.main.db_manager')
 @patch('src.api.main.model')    # On mock le modèle pour éviter d'avoir à charger un vrai fichier .pkl
-def test_predict_success(mock_model, valid_payload):
+def test_predict_success(mock_model, mock_db_manager, valid_payload):
     """Test : Données valides -> Statut 200 et retour de la prédiction."""
     # Configuration du mock pour simuler le comportement du modèle de ML
     mock_model.predict.return_value = pd.Series([1500.50]).values # ou np.array
+    mock_db_manager.save_prediction_input.return_value = 1
     
     response = client.post("/predict", json=valid_payload)
     
     assert response.status_code == 200
     assert "prediction" in response.json()
     assert response.json()["prediction"] == [1500.50]
+
     mock_model.predict.assert_called_once()
+    mock_db_manager.save_prediction_input.assert_called_once_with(valid_payload)
+    mock_db_manager.save_prediction_output.assert_called_once_with(1, 1500.50)
 
 def test_predict_invalid_type(valid_payload):
     """Test : Données avec un mauvais type -> Statut 422 (Unprocessable Entity)."""
@@ -80,7 +85,9 @@ def test_predict_coherence_boundaries(valid_payload):
     
     assert response.status_code == 422
 
-def test_predict_with_only_required_fields():
+@patch('src.api.main.db_manager')
+@patch('src.api.main.model')
+def test_predict_with_only_required_fields(mock_model, mock_db_manager):
     """Test que l'API fonctionne même si TOUS les champs optionnels sont omis."""
     minimal_payload = {
         "BuildingType": "Commercial",
@@ -96,32 +103,42 @@ def test_predict_with_only_required_fields():
         "ComplianceStatus": "Compliant"
     }
     
-    with patch('src.api.main.model') as mock_model:
-        mock_model.predict.return_value = pd.Series([42.0]).values
-        response = client.post("/predict", json=minimal_payload)
+    mock_model.predict.return_value = pd.Series([42.0]).values
+    mock_db_manager.save_prediction_input.return_value = 2
+    
+    response = client.post("/predict", json=minimal_payload)
         
-        assert response.status_code == 200
+    assert response.status_code == 200
+    mock_db_manager.save_prediction_output.assert_called_once_with(2, 42.0)
 
+@patch('src.api.main.db_manager')
 @patch('src.api.main.apply_feature_engineering')
 @patch('src.api.main.delete_useless_features')
-def test_predict_empty_after_preprocessing(mock_delete, mock_engineering, valid_payload):
+def test_predict_empty_after_preprocessing(mock_delete, mock_engineering, mock_db_manager, valid_payload):
     """Test si les données deviennent vides après filtrage -> Erreur 400."""
     # On simule que le feature engineering retourne un DataFrame vide
     mock_delete.return_value = pd.DataFrame([valid_payload])
-    mock_engineering.return_value = pd.DataFrame()  # Vide !
+    mock_engineering.return_value = pd.DataFrame()
+    mock_db_manager.save_prediction_input.return_value = 3
 
     response = client.post("/predict", json=valid_payload)
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Les données d'entrée sont invalides après le prétraitement."
 
+    mock_db_manager.save_prediction_output.assert_not_called()
+
+@patch('src.api.main.db_manager')
 @patch('src.api.main.model')
-def test_predict_internal_server_error(mock_model, valid_payload):
+def test_predict_internal_server_error(mock_model, mock_db_manager, valid_payload):
     """Test si le modèle crash -> Erreur 500."""
     # On force le modèle à lever une erreur lors du .predict()
     mock_model.predict.side_effect = Exception("Crash interne du modèle ML")
+    mock_db_manager.save_prediction_input.return_value = 4
 
     response = client.post("/predict", json=valid_payload)
 
     assert response.status_code == 500
     assert "Crash interne du modèle ML" in response.json()["detail"]
+
+    mock_db_manager.save_prediction_output.assert_not_called()
