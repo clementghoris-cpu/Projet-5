@@ -18,7 +18,6 @@ class APIConfig:
 
 class TrainConfig:
     TRAIN_DATA_CSV_PATH: str = os.path.join(os.getcwd(), "data", "raw", "building_consumption.csv") # Ne pas utiliser de \ car lors du déploiement sur Linux, cela peut poser problème. Utiliser os.path.join pour la compatibilité multi-plateforme.
-    MODEL_PATH: str = os.path.join(os.getcwd(), "data", "model", "pipeline_model.pkl")
 
 database_config = DatabaseConfig()
 model_config = ModelConfig()

@@ -5,6 +5,7 @@ description = "Déployez un modèle de Machine Learning"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "coverage>=7.15.0",
     "fastapi>=0.139.0",
     "httpx2>=2.5.0",
     "numpy>=2.5.0",

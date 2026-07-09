@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 import pandas as pd
 from src.api.main import app
 
@@ -114,8 +114,9 @@ def test_predict_with_only_required_fields(mock_model, mock_db_manager):
 @patch('src.api.main.db_manager')
 @patch('src.api.main.apply_feature_engineering')
 @patch('src.api.main.delete_useless_features')
-def test_predict_empty_after_preprocessing(mock_delete, mock_engineering, mock_db_manager, valid_payload):
-    """Test si les données deviennent vides après filtrage -> Erreur 400."""
+@patch('src.api.main.model', new_callable=MagicMock)
+def test_predict_empty_after_preprocessing(mock_model, mock_delete, mock_engineering, mock_db_manager, valid_payload):
+    """Test si les données deviennent vides après filtrage -> Erreur 400."""    
     # On simule que le feature engineering retourne un DataFrame vide
     mock_delete.return_value = pd.DataFrame([valid_payload])
     mock_engineering.return_value = pd.DataFrame()
