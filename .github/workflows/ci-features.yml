@@ -23,19 +23,24 @@ jobs:
           uses: actions/setup-python@v6
           with:
             python-version: '3.14'
-            cache: 'pip'
+            
+        - name: Configuration de uv
+          uses: astral-sh/setup-uv@v5
+          with:
+            enable-cache: true
             
         - name: Installation dépendances
           run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
-            pip install pytest ruff
+            sed -i '/pywin32/d' requirements.txt            
+            uv pip install --system -r requirements.txt
+            uv pip install --system pytest ruff
 
         - name: Lint avec Ruff
-          run: ruff check .
+          run: uv run ruff check .
 
         - name:  Exécuter tests avec Pytest
           run: |
-            pytest tests/
+            uv run pytest tests/
           env:
             PYTHONPATH: .
+            TA_TIMEOUT: '60'
