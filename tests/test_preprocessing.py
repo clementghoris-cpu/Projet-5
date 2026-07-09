@@ -12,14 +12,14 @@ def sample_raw_data():
     return pd.DataFrame(
         {
             "ENERGYSTARScore": [80.0, np.nan, 95.0, 50.0],
-            "SiteEUIWN(kBtu/sf)": [10.0, 20.0, 15.0, 500.0],  # 500 sera un outlier
+            "SiteEUIWN_kBtu_sf": [10.0, 20.0, 15.0, 500.0],  # 500 sera un outlier
             "LargestPropertyUseTypeGFA": [1000, 1500, 2000, 1200],
             "PropertyGFATotal": [1200, 1500, 2500, 1500],  # Ligne 1: Largest > Total -> à supprimer
             "LargestPropertyUseType": ["Office", "Office", "Hotel", "Office"],
             "NumberofBuildings": [1, 1, 1, 1],
             "NumberofFloors": [5, 3, 2, 4],
-            "Electricity(kBtu)": [100, 200, 300, 400],
-            "SourceEUIWN(kBtu/sf)": [12, 22, 32, 42],
+            "electricity_kbtu": [100, 200, 300, 400],
+            "SourceEUIWN_kBtu_sf": [12, 22, 32, 42],
             "GHGEmissionsIntensity": [1.2, 2.2, 3.2, 100.0], 
             "Outlier": [np.nan, np.nan, np.nan, np.nan],
             "ComplianceStatus": [
@@ -42,11 +42,11 @@ def sample_engineering_data():
             "ThirdLargestPropertyUseType": ["Storage", np.nan],
             "YearBuilt": [2000, 2010],
             "PropertyGFAParking": [100, 0],
-            "PropertyGFABuilding(s)": [900, 1000],
+            "PropertyGFABuildings": [900, 1000],
             "LargestPropertyUseTypeGFA": [700, 800],
-            "Electricity(kBtu)": [50, 0],
-            "NaturalGas(kBtu)": [0, 30],
-            "SteamUse(kBtu)": [10, 0],
+            "electricity_kbtu": [50, 0],
+            "natural_gas_kbtu": [0, 30],
+            "steam_use_kbtu": [10, 0],
             "BuildingType": ["NonResidential", "NonResidential"],
             "PrimaryPropertyType": ["Hotel", "Office"],
         }
@@ -109,7 +109,7 @@ def test_apply_feature_engineering(sample_engineering_data):
 
     # Assert - Validation de la suppression des colonnes intermédiaires
     dropped_cols = [
-        "Electricity(kBtu)",
+        "electricity_kbtu",
         "BuildingType",
         "SecondLargestPropertyUseType",
     ]
