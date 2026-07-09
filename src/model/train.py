@@ -1,30 +1,30 @@
 import joblib
 import numpy as np
-import pandas as pd
+#import pandas as pd
 import preprocessing
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-#from src.database.db_manager import DatabaseManager
-from src.project_config import train_config
-
+from src.database.db_manager import DatabaseManager
+#from src.project_config import train_config, model_config
+from src.project_config import model_config
 
 def run_model_training():
     """
     Exécute l'entraînement du modèle et sauvegarde le pipeline de prétraitement 
     et le modèle entraîné dans des fichiers.
     """
-    #db_manager = DatabaseManager()
+    db_manager = DatabaseManager()
 
     try:    
         print("Chargement des données...")
         # Lecture des données d'entrainement via le fichier CSV
-        df_raw = pd.read_csv(train_config.TRAIN_DATA_CSV_PATH)
+        #df_raw = pd.read_csv(train_config.TRAIN_DATA_CSV_PATH)
 
         # Lecture des données d'entrainement via la base de données
-        #df_raw = db_manager.get_training_data()
+        df_raw = db_manager.get_training_data()
 
         # 1. Nettoyage des features inutiles
         print("Nettoyage des features inutiles...")
@@ -33,8 +33,8 @@ def run_model_training():
 
         # 2. Split valeur cible et features
         print("Séparation de la valeur cible et des features...")
-        X = df_raw.drop(columns=["SiteEUIWN(kBtu/sf)"])
-        y = df_raw["SiteEUIWN(kBtu/sf)"]
+        X = df_raw.drop(columns=["SiteEUIWN_kBtu_sf"])
+        y = df_raw["SiteEUIWN_kBtu_sf"]
 
         # 3. Application du feature engineering
         print("Application du feature engineering...")
@@ -42,7 +42,7 @@ def run_model_training():
         
         # 4. Définition des features catégorielles et numériques
         categorical_features = ["LargestPropertyUseType"]
-        numerical_features = ["NumberofBuildings", "NumberofFloors", "PropertyGFAParking", "PropertyGFABuilding(s)", 
+        numerical_features = ["NumberofBuildings", "NumberofFloors", "PropertyGFAParking", "PropertyGFABuildings", 
                             "LargestPropertyUseTypeGFA", "SecondLargestPropertyUseTypeGFA", 
                             "ThirdLargestPropertyUseTypeGFA", "ENERGYSTARScore", "BuildingAge"]
 
@@ -75,11 +75,11 @@ def run_model_training():
 
         # 9. Sauvegarde du pipeline et du modèle
         print("Sauvegarde du pipeline et du modèle...")
-        joblib.dump(pipeline, train_config.MODEL_PATH)
+        joblib.dump(pipeline, model_config.MODEL_PATH)
     except Exception as e:
         print(f"Erreur survenue lors de l'entrainement du modèle : {e}")
     finally:
-        #db_manager.close() 
+        db_manager.close() 
         print("Entrainement modèle terminé...")
 
 if __name__ == "__main__":

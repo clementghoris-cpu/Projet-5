@@ -1,4 +1,7 @@
+import os
+import time
 import pandas as pd
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -8,9 +11,31 @@ from src.model.model_loader import load_model
 from src.model.preprocessing import delete_useless_features, apply_feature_engineering
 from src.database.db_manager import DatabaseManager
 
-model = load_model(model_config.MODEL_PATH)
-app = FastAPI(title=api_config.TITLE, version=api_config.VERSION, debug=api_config.DEBUG)
+model = None
 db_manager = DatabaseManager()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Démarrage de l'API
+    """
+    global model
+    retries = 10
+    while retries > 0 and not os.path.exists(model_config.MODEL_PATH):
+        print(f"Attente du modèle... ({retries} essais restants)")
+        time.sleep(3)
+        retries -= 1
+
+    if os.path.exists(model_config.MODEL_PATH):
+        print("Chargement du modèle...")
+        model = load_model(model_config.MODEL_PATH)
+    else:
+        print("Attention : le modèle n'a pas pu être chargé au démarrage (entrainement en cours ?)")
+
+    yield
+    db_manager.close()
+
+app = FastAPI(title=api_config.TITLE, version=api_config.VERSION, debug=api_config.DEBUG)
 
 # Exceptions handlers
 
@@ -42,7 +67,15 @@ async def health_check():
           description="Cette route prend en entrée les données nécessaires pour prédire la consommation énergétique et retourne la prédiction.",
           response_description="La prédiction de la consommation énergétique.")
 async def predict(input_data: PredictionInput):
+    global model
+
     try:
+        if model is None:
+            if os.path.exists(model_config.MODEL_PATH):
+                model = load_model(model_config.MODEL_PATH)
+            else:
+                raise HTTPException(status_code=503, detail="Le modèle est toujours en cours d'entrainement. Réessayer d'ici quelques instants.")
+
         print("Données d'entrée reçues pour la prédiction :")
         input_dict = input_data.model_dump(by_alias=True)   
 

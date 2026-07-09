@@ -1,14 +1,23 @@
 FROM python:3.14-slim
 
-WORKDIR /app
-ENV PYTHONPATH=/app
+# Installation du package manager uv directement depuis le binaire officiel
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-COPY requirements.txt pyproject.toml uv.lock ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Configuration de l'utilisateur non-root (requis par HuggingFace)
+# Utilisation de l'utilisateur root dans l'environnement de développement (override du fichier docker-compose.test.yml)
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH \
+    PYTHONPATH=/home/user/app
 
-COPY src/ ./src/
-COPY data/ ./data/
-COPY .env .
+WORKDIR $HOME/app
 
-#CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD ["sh", "-c", "python src/database/init_db.py && uvicorn src.api.main:app --host 0.0.0.0 --port 8000"]
+COPY --chown=user pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-cache
+
+COPY --chown=user src/ ./src/
+COPY --chown=user data/ ./data/
+COPY --chown=user .env .
+
+CMD uv run uvicorn src.api.main:app --host 0.0.0.0 --port 7860

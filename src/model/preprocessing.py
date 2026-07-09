@@ -17,31 +17,36 @@ def delete_missing_data_and_outliers(df_input : pd.DataFrame) -> pd.DataFrame:
     df = df_input.copy()
 
     # Suppression des lignes avec données manquantes
-    df = df.dropna(subset=["ENERGYSTARScore", "SiteEUIWN(kBtu/sf)", "LargestPropertyUseTypeGFA", "LargestPropertyUseType"])
+    print("Suppression des lignes avec données manquantes")
+    df = df.dropna(subset=["ENERGYSTARScore", "SiteEUIWN_kBtu_sf", "LargestPropertyUseTypeGFA", "LargestPropertyUseType"])
 
     # Suppression des lignes où LargestPropertyUseTypeGFA est plus grande que la surface totale PropertyGFATotal
+    print("Suppression des lignes où LargestPropertyUseTypeGFA est plus grande que la surface totale PropertyGFATotal")
     df = df[df["LargestPropertyUseTypeGFA"] <= df["PropertyGFATotal"]]
 
     # Suppression des valeurs impossibles
+    print("Suppression des valeurs impossibles")
     df = df[(df["NumberofBuildings"] != 0) & (df["NumberofFloors"] > 0) & (df["NumberofFloors"] <= 76)]
 
-    df = df[(df["Electricity(kBtu)"] >= 0) 
-            & (df["SourceEUIWN(kBtu/sf)"] >= 0) 
+    df = df[(df["electricity_kbtu"] >= 0) 
+            & (df["SiteEUIWN_kBtu_sf"] >= 0) 
             & (df["GHGEmissionsIntensity"] >= 0)]
     
     # Suppresion des lignes où 'Outlier' et 'ComplianceStatus' sont True
+    print("Suppresion des lignes où 'Outlier' et 'ComplianceStatus' sont True")
     df = df[df["Outlier"].isna()]
     df = df[df["ComplianceStatus"].str.lower() == "compliant"]
 
     # Suppression des outliers SiteEUIWN(kBtu/sf)
-    Q1 = df["SiteEUIWN(kBtu/sf)"].quantile(0.25)
-    Q3 = df["SiteEUIWN(kBtu/sf)"].quantile(0.75)
+    print("Suppression des outliers SiteEUIWN(kBtu/sf)")
+    Q1 = df["SiteEUIWN_kBtu_sf"].quantile(0.25)
+    Q3 = df["SiteEUIWN_kBtu_sf"].quantile(0.75)
     
     IQR = Q3 - Q1    
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
 
-    df = df[(df["SiteEUIWN(kBtu/sf)"] >= lower_bound) & (df["SiteEUIWN(kBtu/sf)"] <= upper_bound)]
+    df = df[(df["SiteEUIWN_kBtu_sf"] >= lower_bound) & (df["SiteEUIWN_kBtu_sf"] <= upper_bound)]
 
     # Suppression des outliers GHGEmissionsIntensity
     Q1 = df["GHGEmissionsIntensity"].quantile(0.25)
@@ -72,9 +77,9 @@ def delete_useless_features(df_input : pd.DataFrame) -> pd.DataFrame:
     columns_to_drop = [
         "OSEBuildingID", "DataYear", "PropertyName", "Address", "City", "State", "ZipCode", "Latitude", "Longitude", 
         "TaxParcelIdentificationNumber", "CouncilDistrictCode", "YearsENERGYSTARCertified", "Comments", "DefaultData", 
-        "Outlier", "ComplianceStatus", "PropertyGFATotal", "SiteEUI(kBtu/sf)", "SourceEUI(kBtu/sf)", "SourceEUIWN(kBtu/sf)",
-        "SiteEnergyUse(kBtu)", "Electricity(kWh)", "SiteEnergyUseWN(kBtu)", "ListOfAllPropertyUseTypes", 
-        "NaturalGas(therms)", "TotalGHGEmissions"        
+        "Outlier", "ComplianceStatus", "PropertyGFATotal", "SiteEUI_kBtu_sf", "SourceEUI_kBtu_sf", "SourceEUIWN_kBtu_sf",
+        "SiteEnergyUse_kBtu", "electricity_kwh", "SiteEnergyUseWN_kBtu", "ListOfAllPropertyUseTypes", 
+        "natural_gas_therms", "TotalGHGEmissions"        
     ]
     df = df.drop(columns=columns_to_drop, errors='ignore')
     
@@ -107,8 +112,7 @@ def apply_feature_engineering(df_input : pd.DataFrame) -> pd.DataFrame:
     df["ThirdLargestPropertyUseType"] = df["ThirdLargestPropertyUseType"].fillna('NotUsed')
  
     # Features surfaces ratio
-    print("test")
-    totalSurface = df["PropertyGFAParking"] + df["PropertyGFABuilding(s)"] # surface totale = parking + building
+    totalSurface = df["PropertyGFAParking"] + df["PropertyGFABuildings"] # surface totale = parking + building
 
     print(f"totalSurface: {totalSurface.tolist()[0]}")
     ## Ratio surface parking  
@@ -128,13 +132,13 @@ def apply_feature_engineering(df_input : pd.DataFrame) -> pd.DataFrame:
     df.fillna({"ThirdLargestUseSurfaceRatio": 0}, inplace=True)
 
     # Feature Energies 
-    df["HasElectricity"] = (df["Electricity(kBtu)"] > 0).astype(int)
-    df["HasNaturalGas"] = (df["NaturalGas(kBtu)"] > 0).astype(int)
-    df["HasSteam"] = (df["SteamUse(kBtu)"] > 0).astype(int)
+    df["HasElectricity"] = (df["electricity_kbtu"] > 0).astype(int)
+    df["HasNaturalGas"] = (df["natural_gas_kbtu"] > 0).astype(int)
+    df["HasSteam"] = (df["steam_use_kbtu"] > 0).astype(int)
 
     # Suppression des colonnes inutiles après le feature engineering
     df = df.drop(columns=[
-        "Electricity(kBtu)", "NaturalGas(kBtu)", "SteamUse(kBtu)",
+        "electricity_kbtu", "natural_gas_kbtu", "steam_use_kbtu",
         "BuildingType", "PrimaryPropertyType",
         "SecondLargestPropertyUseType", "ThirdLargestPropertyUseType"
     ])

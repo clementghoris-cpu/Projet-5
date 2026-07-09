@@ -5,6 +5,7 @@ description = "Déployez un modèle de Machine Learning"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "coverage>=7.15.0",
     "fastapi>=0.139.0",
     "httpx2>=2.5.0",
     "numpy>=2.5.0",
@@ -14,6 +15,7 @@ dependencies = [
     "pytest>=9.1.1",
     "scikit-learn>=1.9.0",
     "sqlalchemy>=2.0.51",
+    "testcontainers[postgresql]>=4.14.2",
     "uvicorn>=0.49.0",
 ]
 [tool.pytest.ini_options]
