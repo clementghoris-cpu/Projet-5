@@ -1,0 +1,127 @@
+name: CD - Déploiement sur les environnements staging et production
+
+on:
+  push:
+    branches:
+      - release
+  pull_request:
+    branches:
+      - release
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-staging:
+    name: Déploiement et tests sur Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Vérification code
+        uses: actions/checkout@v7
+
+      - name: Déclenchement du déploiement Render sur l'environnement staging
+        run: |
+          curl -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
+
+      - name: Attendre que le déploiement sur Render soit terminé
+        # On attend environ 2-3 minutes que Render déploie le conteneur avant de lancer les tests
+        run: sleep 120 
+
+      - name: Installation Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Configuration de uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Installation dépendances
+        run: |
+          sed -i '/pywin32/d' requirements.txt            
+            uv pip install --system -r requirements.txt
+            uv pip install --system pytest ruff
+
+      - name: Exécution des tests d'intégration et fonctionnels
+        env:
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          pytest tests/integration/
+          pytest tests/functional/
+
+  merge-and-release:
+    name: Merge release vers main et génère une Release
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    outputs:
+      release_tag: ${{ steps.auto_tag.outputs.TAG_NAME }}
+
+    steps:
+      - name: Récupération du dépôt (Checkout)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Configurer Git
+        run: |
+          git config --global user.name "github-action[bot]"
+          git config --global user.email "github-actions[bot]@user.noreply.github.com"
+
+      - name: Fusionner release dans main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge origin/release --no-ff -m 'chore: merge branche release dans main [skip ci]'
+
+      - name: Génération automatique du tag de version
+        id: auto_tag
+        run: |
+          # on utilise la date/heure pour générer le tag (ex : V2026.07.14-1230)
+          TAG_NAME="v$(date + '%Y.%m.%d-%H%M')"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Nouveau tag généré : $TAG_NAME"
+
+      - name: Créer et publier la Release Github
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.auto_tag.outputs.TAG_NAME }}
+          name: Release ${{ steps.auto_tag.outputs.TAG_NAME }}
+          body: "Déploiement automatique après succès des tests sur l'environnement de Staging."
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  approve-production:
+    name: Attente d'approbation manuelle
+    runs-on: ubuntu-latest
+    needs: merge-and-release
+    permissions:
+      issues: write
+
+    steps:
+      - name: Demande d'approbation
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: clementghoris-cpu
+          minimum-approvals: 1
+          issue-title: "Validation requise: Déploiement en production de la Release version ${{ needs.merge-and-release.outputs.release_tag }}"
+          issue-body: "Les tests sur Staging ont réussi et la version `${{ needs.merge-and-release.outputs.release_tag }}` a été créée.\n\nVeuillez répondre à cette issue par **approve** pour lancer le déploiement en production, ou **deny** pour l'annuler."
+
+  deploy-production:
+    name: Déploiement en Production
+    runs-on: ubuntu-latest
+    environment: production
+    needs: approve-production
+    steps:
+      - name: Déclenchement du déploiement Render sur l'environnement de production
+        run: |
+          curl -X POST "${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}"
+
