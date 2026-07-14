@@ -1,4 +1,4 @@
-name: Intégration continue
+name: CI - Intégration continue
 
 on:
     push:
@@ -8,8 +8,6 @@ on:
     pull_request:
         branches:
             - develop
-            - release
-            - main
 
 jobs:
     analyse-et-tests:
