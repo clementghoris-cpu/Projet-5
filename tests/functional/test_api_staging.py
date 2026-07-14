@@ -1,4 +1,5 @@
 import pytest
+import logging
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -7,7 +8,7 @@ from src.api.main import app
 from src.project_config import database_config
 from src.database.models import PredictionInput as DBInputModel, PredictionOutput as DBOutputModel
 
-client = TestClient(app)
+client = TestClient(app, raise_server_exceptions=True)
 
 @patch("src.api.main.model")
 def test_staging(mock_model):
@@ -48,6 +49,9 @@ def test_staging(mock_model):
 
     assert response.status_code == 200
     assert response.json() == {"prediction": [expected_prediction_value]}
+ 
+    logger = logging.getLogger(__name__)
+    logger.info(f"URL base de données : {database_config.DATABASE_URL}")
 
     engine = create_engine(database_config.DATABASE_URL)
     Session = scoped_session(sessionmaker(bind=engine))

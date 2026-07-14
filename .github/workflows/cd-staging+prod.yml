@@ -25,8 +25,43 @@ jobs:
           curl -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
 
       - name: Attendre que le déploiement sur Render soit terminé
-        # On attend environ 2-3 minutes que Render déploie le conteneur avant de lancer les tests
-        run: sleep 120 
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          echo "Vérification du statut du déploiement sur Render..."
+          
+          # Boucle d'interrogation (timeout de 10 minutes max pour le build Docker)
+          MAX_ATTEMPTS=40
+          DELAY=15
+          attempt=1
+          
+          while [ $attempt -le $MAX_ATTEMPTS ]; do
+            # Interrogation de l'API de Render pour obtenir les déploiements du service
+            RESPONSE=$(curl -s -X GET "https://api.render.com/v1/services/$SERVICE_ID/deploys?limit=1" \
+              -H "Accept: application/json" \
+              -H "Authorization: Bearer $RENDER_API_KEY")
+            
+            # Extraction du statut du déploiement le plus récent
+            STATUS=$(echo "$RESPONSE" | jq -r '.[0].deploy.status')
+            DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.[0].deploy.id')
+            
+            echo "Tentative $attempt/$MAX_ATTEMPTS : Déploiement [$DEPLOY_ID] est actuellement '$STATUS'"
+            
+            if [ "$STATUS" = "live" ]; then
+              echo "Le déploiement est réussi et actif (Live) !"
+              exit 0
+            elif [ "$STATUS" = "build_failed" ] || [ "$STATUS" = "update_failed" ] || [ "$STATUS" = "canceled" ]; then
+              echo "Le déploiement a échoué sur Render avec le statut : $STATUS"
+              exit 1
+            fi
+            
+            attempt=$((attempt + 1))
+            sleep $DELAY
+          done
+          
+          echo "⏳ Timeout : Le déploiement a mis trop de temps à se terminer (> 10 min)."
+          exit 1
 
       - name: Installation Python
         uses: actions/setup-python@v6
@@ -53,7 +88,7 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         run: |
           pytest tests/integration/
-          pytest tests/functional/
+          uv run pytest --log-cli-level=INFO tests/functional/test_api_staging.py
 
   merge-and-release:
     name: Merge release vers main et génère une Release

@@ -1,5 +1,5 @@
 import os
-from models import Base, TrainData
+from src.database.models import Base, TrainData
 import pandas as pd
 from src.project_config import database_config, train_config
 from sqlalchemy import create_engine
