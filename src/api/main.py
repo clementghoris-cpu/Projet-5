@@ -1,6 +1,7 @@
 import os
 import time
 import pandas as pd
+import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
@@ -38,6 +39,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=api_config.TITLE, version=api_config.VERSION, debug=api_config.DEBUG)
 
 # Exceptions handlers
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request : Request, exc : Exception):
+    print("--- EXCEPTION API ---")
+    traceback.print_exc()
+    print("---------------------")
+    return JSONResponse(
+        status_code=500,
+        content={"message": str(exc), "traceback": traceback.format_exc()}
+    )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request : Request, exc : RequestValidationError):

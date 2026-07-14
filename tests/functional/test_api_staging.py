@@ -49,6 +49,8 @@ def test_staging(mock_model):
     assert response.status_code == 200
     assert response.json() == {"prediction": [expected_prediction_value]}
 
+    print(f"URL base de données : {database_config.DATABASE_URL}")
+
     engine = create_engine(database_config.DATABASE_URL)
     Session = scoped_session(sessionmaker(bind=engine))
     session = Session()
