@@ -60,7 +60,7 @@ jobs:
             sleep $DELAY
           done
           
-          echo "⏳ Timeout : Le déploiement a mis trop de temps à se terminer (> 10 min)."
+          echo "Timeout : Le déploiement a mis trop de temps à se terminer (> 10 min)."
           exit 1
 
       - name: Installation Python
@@ -86,6 +86,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
         run: |
           pytest tests/integration/
           uv run pytest --log-cli-level=INFO tests/functional/test_api_staging.py

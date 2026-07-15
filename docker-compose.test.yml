@@ -6,7 +6,7 @@ services:
 
   api:
     ports:
-      - "8000:7860" 
+      - "8000:10000" 
     volumes:
       - ./data/model:/home/user/app/data/model
 

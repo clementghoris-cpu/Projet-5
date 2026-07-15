@@ -12,6 +12,7 @@ class ModelConfig:
     MODEL_PATH: str = os.path.join(os.getcwd(), "data", "model", "pipeline_model.pkl") # Ne pas utiliser de \ car lors du déploiement sur Linux, cela peut poser problème. Utiliser os.path.join pour la compatibilité multi-plateforme.
 
 class APIConfig:
+    STAGING_API_URL = os.getenv("STAGING_API_URL", "localhost:10000")
     DEBUG: bool = os.getenv("API_DEBUG", "False").lower() == "true"
     TITLE: str = "API prediction consommation énergétique"
     VERSION: str = "1.0"
