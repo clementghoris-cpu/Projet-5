@@ -114,12 +114,13 @@ jobs:
           git checkout main
           git pull origin main
           git merge origin/release --no-ff -m 'chore: merge branche release dans main [skip ci]'
+          git push origin main
 
       - name: Génération automatique du tag de version
         id: auto_tag
         run: |
           # on utilise la date/heure pour générer le tag (ex : V2026.07.14-1230)
-          TAG_NAME="v$(date + '%Y.%m.%d-%H%M')"
+          TAG_NAME="v$(date +'%Y.%m.%d-%H%M')"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "Nouveau tag généré : $TAG_NAME"
 
