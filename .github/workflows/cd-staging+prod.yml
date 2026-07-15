@@ -162,3 +162,41 @@ jobs:
         run: |
           curl -X POST "${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}"
 
+      - name: Attendre que le déploiement sur la Production soit terminé
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ secrets.RENDER_PRODUCTION_SERVICE_ID }} 
+        run: |
+          echo "Vérification du statut du déploiement sur Render (Production)..."
+          
+          # Boucle d'interrogation (timeout de 10 minutes max)
+          MAX_ATTEMPTS=40
+          DELAY=15
+          attempt=1
+          
+          while [ $attempt -le $MAX_ATTEMPTS ]; do
+            # Interrogation de l'API de Render pour obtenir le dernier déploiement de production
+            RESPONSE=$(curl -s -X GET "https://api.render.com/v1/services/$SERVICE_ID/deploys?limit=1" \
+              -H "Accept: application/json" \
+              -H "Authorization: Bearer $RENDER_API_KEY")
+            
+            # Extraction du statut et de l'ID
+            STATUS=$(echo "$RESPONSE" | jq -r '.[0].deploy.status')
+            DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.[0].deploy.id')
+            
+            echo "Tentative $attempt/$MAX_ATTEMPTS : Déploiement Production [$DEPLOY_ID] est actuellement '$STATUS'"
+            
+            if [ "$STATUS" = "live" ]; then
+              echo "Le déploiement en Production est réussi et actif (Live) !"
+              exit 0
+            elif [ "$STATUS" = "build_failed" ] || [ "$STATUS" = "update_failed" ] || [ "$STATUS" = "canceled" ]; then
+              echo "Le déploiement a échoué sur Render Production avec le statut : $STATUS"
+              exit 1
+            fi
+            
+            attempt=$((attempt + 1))
+            sleep $DELAY
+          done
+          
+          echo "Timeout : Le déploiement de Production a mis trop de temps à se terminer (> 10 min)."
+          exit 1
