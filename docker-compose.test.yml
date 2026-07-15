@@ -1,0 +1,15 @@
+services:
+  trainer:
+    user: "root"
+    volumes:
+      - ./data/model:/home/user/app/data/model  # en dev, pointe directement dans le dossier local /data/model
+
+  api:
+    ports:
+      - "8000:10000" 
+    volumes:
+      - ./data/model:/home/user/app/data/model
+
+  db:
+    ports:
+      - "5432:5432" 

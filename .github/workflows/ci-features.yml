@@ -1,0 +1,44 @@
+name: CI - Intégration continue
+
+on:
+    push:
+        branches:
+            - 'feature/*'
+            - 'docs/*'
+    pull_request:
+        branches:
+            - develop
+
+jobs:
+    analyse-et-tests:
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Vérification code
+          uses: actions/checkout@v7
+
+        - name: Installation Python
+          uses: actions/setup-python@v6
+          with:
+            python-version: '3.14'
+            
+        - name: Configuration de uv
+          uses: astral-sh/setup-uv@v5
+          with:
+            enable-cache: true
+            
+        - name: Installation dépendances
+          run: |
+            sed -i '/pywin32/d' requirements.txt            
+            uv pip install --system -r requirements.txt
+            uv pip install --system pytest ruff
+
+        - name: Lint avec Ruff
+          run: uv run ruff check .
+
+        - name:  Exécuter tests avec Pytest
+          run: |
+            uv run pytest tests/unit/
+          env:
+            PYTHONPATH: .
+            TA_TIMEOUT: '60'
