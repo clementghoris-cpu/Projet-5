@@ -22,4 +22,7 @@ COPY --chown=user data/ ./data/
 # l'ajout de * permet d'éviter que le déploiement n'échoue car il ne va pas trouver le fichier .env dans l'environnement staging ou production
 COPY --chown=user .env* .
 
-CMD uv run uvicorn src.api.main:app --host 0.0.0.0 --port 10000
+COPY --chown=user entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
