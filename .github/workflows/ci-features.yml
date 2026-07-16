@@ -6,9 +6,6 @@ on:
             - 'feature/*'
             - 'docs/*'
             - develop
-    pull_request:
-        branches:
-            - develop
 
 jobs:
     analyse-et-tests:
