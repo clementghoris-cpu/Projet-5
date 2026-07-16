@@ -25,3 +25,10 @@ pythonpath = ["."]
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
+[tool.coverage.run]
+omit = [
+    "*__init__.py",
+    "tests/*",
+    "src/project_config.py",
+    "src/model/model_loader.py"
+]
