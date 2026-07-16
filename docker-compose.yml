@@ -1,6 +1,8 @@
 services:
   trainer:
     build: .
+    # Cette ligne vide l'ENTRYPOINT du Dockerfile pour ce service uniquement. Nous ne voulons pas démarrer l'API mais juste exécuter le script train.py
+    entrypoint: ""
     command: sh -c "uv run python src/database/init_db.py && uv run python src/model/train.py"
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
