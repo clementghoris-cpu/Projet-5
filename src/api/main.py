@@ -1,6 +1,5 @@
 import os
 import time
-import sys
 import pandas as pd
 import traceback
 from contextlib import asynccontextmanager
@@ -12,7 +11,6 @@ from .schemas import PredictionInput
 from src.model.model_loader import load_model
 from src.model.preprocessing import delete_useless_features, apply_feature_engineering
 from src.database.db_manager import DatabaseManager
-from src.database.init_db import init_db
 
 model = None
 db_manager = DatabaseManager()
@@ -23,9 +21,6 @@ async def lifespan(app: FastAPI):
     Démarrage de l'API
     """
     global model
-
-    # Initialisation de la base de données
-    init_db()
 
     retries = 10
     while retries > 0 and not os.path.exists(model_config.MODEL_PATH):
@@ -48,10 +43,10 @@ app = FastAPI(title=api_config.TITLE, version=api_config.VERSION, debug=api_conf
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request : Request, exc : Exception):
-    sys.stderr.write("--- EXCEPTION API ---")
-    sys.stderr.write(f"{traceback.print_exc()}")
-    sys.stderr.write("---------------------")
-    sys.stderr.flush()
+    print("--- EXCEPTION API ---")
+    traceback.print_exc()
+    print("---------------------")
+    
     return JSONResponse(
         status_code=500,
         content={"message": str(exc), "traceback": traceback.format_exc()}
