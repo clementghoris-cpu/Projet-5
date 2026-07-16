@@ -22,7 +22,7 @@ COPY --chown=user data/ ./data/
 # l'ajout de * permet d'éviter que le déploiement n'échoue car il ne va pas trouver le fichier .env dans l'environnement staging ou production
 COPY --chown=user .env* .
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY --chown=user entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
