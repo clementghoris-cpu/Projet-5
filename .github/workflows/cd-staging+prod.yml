@@ -84,7 +84,7 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
         run: |
-          pytest tests/integration/
+          uv run pytest tests/integration/
           uv run pytest --log-cli-level=INFO tests/functional/test_api_staging.py
 
   merge-and-release:
