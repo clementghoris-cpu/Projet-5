@@ -5,26 +5,35 @@ description = "Déployez un modèle de Machine Learning"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "coverage>=7.15.0",
     "fastapi>=0.139.0",
     "httpx2>=2.5.0",
     "numpy>=2.5.0",
     "pandas>=3.0.3",
     "psycopg[binary]>=3.3.4",
-    "pydantic>=2.13.4",
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
+    "pydantic>=2.13.4",    
     "scikit-learn>=1.9.0",
     "sqlalchemy>=2.0.51",
     "streamlit>=1.59.2",
-    "testcontainers[postgresql]>=4.14.2",
     "uvicorn>=0.49.0",
 ]
+
+# Dépendances utilisées uniquement pour le développement et les tests, ne pas les inclures en prod (args uv sync --no-dev)
+[dependency-groups]
+dev = [
+    "coverage>=7.15.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "testcontainers[postgresql]>=4.14.2",
+    "ruff>=0.15.22",
+]
+
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
+
 [tool.coverage.run]
 omit = [
     "*__init__.py",
