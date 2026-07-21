@@ -143,3 +143,33 @@ def test_predict_internal_server_error(mock_model, mock_db_manager, valid_payloa
     assert "Crash interne du modèle ML" in response.json()["detail"]
 
     mock_db_manager.save_prediction_output.assert_not_called()
+
+@patch('src.api.main.os.path.exists', return_value=False)
+@patch('src.api.main.model', None)
+def test_predict_model_not_found_raises_503(mock_exists, valid_payload):
+    """Test : Si le modèle est introuvable sur le disque -> Statut 503."""
+    response = client.post("/predict", json=valid_payload)
+    
+    assert response.status_code == 503
+    assert "Le modèle est toujours en cours d'entrainement" in response.json()["detail"]
+
+def test_global_exception_handler():
+    """Test du handler d'exception global sur une erreur inattendue."""
+    # Instanciation d'un client qui n'élève pas les exceptions serveur
+    custom_client = TestClient(app, raise_server_exceptions=False)
+
+    # On patche une fonction appelée dans /health pour simuler un crash brut
+    with patch('src.api.main.app.version', new_callable=MagicMock) as mock_version:
+        mock_version.__str__.side_effect = Exception("Erreur système critique")
+        
+        response = custom_client.get("/health")
+        
+        assert response.status_code == 500
+        assert response.json()["message"] == "Erreur système critique"
+        assert "traceback" in response.json()
+        
+def test_health_check():
+    """Test de la route de santé /health -> Statut 200."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["Status"] == "API is running"
