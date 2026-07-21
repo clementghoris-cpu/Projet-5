@@ -78,7 +78,21 @@ async def health_check():
 @app.post("/predict",
           summary="Prédis la consommation énergétique",
           description="Cette route prend en entrée les données nécessaires pour prédire la consommation énergétique et retourne la prédiction.",
-          response_description="La prédiction de la consommation énergétique.")
+          response_description="La prédiction de la consommation énergétique du bâtiment.",
+          responses={
+              400:{
+                  "description": "Les données d'entrée sont invalides après le prétraitement."
+              },
+              422:{
+                  "description": "Les données envoyées sont invalides ou incomplètes."
+              },
+              500:{
+                  "description": "Une erreur interne est survenue sur le serveur."
+              },
+              503:{
+                  "description": "Le modèle est indisponible ou en cours d'entraînement."
+              }
+          })
 async def predict(input_data: PredictionInput):
     global model
 
